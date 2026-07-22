@@ -1,0 +1,6 @@
+click
+pandas
+pyarrow
+psycopg[binary]
+sqlalchemy
+tqdm

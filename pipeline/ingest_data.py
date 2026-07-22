@@ -2,6 +2,7 @@
 # coding: utf-8
 
 
+import click
 import pandas as pd
 import tqdm as t
 from sqlalchemy import create_engine
@@ -31,29 +32,28 @@ parse_dates = [
 ]
 
 
-def run():
-    pg_user = 'root'
-    pg_password = 'root'
-    pg_host = 'localhost'
-    pg_database = 'ny_taxi'
-    port = 5432
-    
-    year = 2021
-    month = 1
-
-    target_table = 'yellow_taxi_data'
-    
+@click.command()
+@click.option('--pg-user', default='root', help='PostgreSQL user.')
+@click.option('--pg-pass', default='root', help='PostgreSQL password.')
+@click.option('--pg-host', default='localhost', help='PostgreSQL host.')
+@click.option('--pg-db', default='ny_taxi', help='PostgreSQL database name.')
+@click.option('--port', default=5432, type=int, help='PostgreSQL port.')
+@click.option('--year', default=2021, type=int, help='Year of the trip data.')
+@click.option('--month', default=1, type=int, help='Month of the trip data.')
+@click.option('--target-table', default='yellow_taxi_data', help='Destination table name.')
+@click.option('--chunk-size', default=100000, type=int, help='Rows per insert chunk.')
+def run(pg_user, pg_pass, pg_host, pg_db, port, year, month, target_table, chunk_size):
     prefix = 'https://github.com/DataTalksClub/nyc-tlc-data/releases/download/yellow/'
-    chunk_size = 100000
-    
+    file_name = f'yellow_tripdata_{year}-{month:02d}.csv.gz'
+
     df_iter = pd.read_csv(
-        prefix + 'yellow_tripdata_2021-01.csv.gz',
+        prefix + file_name,
         dtype=dtype,
         parse_dates=parse_dates,
         iterator=True,
         chunksize=chunk_size
     )
-    engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_password}@{pg_host}:{port}/{pg_database}')
+    engine = create_engine(f'postgresql+psycopg://{pg_user}:{pg_pass}@{pg_host}:{port}/{pg_db}')
 
     first = True
     
